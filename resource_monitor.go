@@ -43,20 +43,21 @@ func resourceMonitor() *schema.Resource {
 }
 
 func resourceMonitorCreate(d *schema.ResourceData, client interface{}) error {
-	params := uptimerobot.Monitor{
+	mon := uptimerobot.Monitor{
 		URL:          d.Get("url").(string),
 		FriendlyName: d.Get("friendly_name").(string),
-		Type:         uptimerobot.MonitorType(d.Get("type").(string)),
+		Type:         typeFromString(d.Get("type").(string)),
+		Port:         80,
 	}
 	contacts := d.Get("alert_contact").(*schema.Set).List()
 	for _, c := range contacts {
-		params.AlertContacts = append(params.AlertContacts, c.(string))
+		mon.AlertContacts = append(mon.AlertContacts, c.(string))
 	}
-	mon, err := client.(*uptimerobot.Client).NewMonitor(params)
+	ID, err := client.(*uptimerobot.Client).CreateMonitor(mon)
 	if err != nil {
 		return fmt.Errorf("API error: %v", err)
 	}
-	d.SetId(fmt.Sprintf("%d", mon.ID))
+	d.SetId(fmt.Sprintf("%d", ID))
 	return resourceMonitorRead(d, client)
 }
 
@@ -65,7 +66,7 @@ func resourceMonitorRead(d *schema.ResourceData, client interface{}) error {
 	if err != nil {
 		return fmt.Errorf("bad ID %s: %v", d.Id(), err)
 	}
-	mon, err := client.(*uptimerobot.Client).GetMonitorByID(id)
+	mon, err := client.(*uptimerobot.Client).GetMonitor(id)
 	if err != nil {
 		return fmt.Errorf("API error: %v", err)
 	}
@@ -77,16 +78,28 @@ func resourceMonitorRead(d *schema.ResourceData, client interface{}) error {
 }
 
 func resourceMonitorDelete(d *schema.ResourceData, client interface{}) error {
-	id, err := strconv.ParseInt(d.Id(), 10, 64)
+	ID, err := strconv.ParseInt(d.Id(), 10, 64)
 	if err != nil {
 		return fmt.Errorf("bad ID %s: %v", d.Id(), err)
 	}
-	params := uptimerobot.Monitor{
-		ID: id,
-	}
-	_, err = client.(*uptimerobot.Client).DeleteMonitor(params)
-	if err != nil {
+	if err = client.(*uptimerobot.Client).DeleteMonitor(ID); err != nil {
 		return fmt.Errorf("API error: %v", err)
 	}
 	return nil
+}
+
+// typeFromString returns an integer monitor type based on the supplied string.
+func typeFromString(humanReadableType string) int {
+	switch humanReadableType {
+	case "HTTP":
+		return uptimerobot.TypeHTTP
+	case "Keyword":
+		return uptimerobot.TypeKeyword
+	case "Ping":
+		return uptimerobot.TypePing
+	case "Port":
+		return uptimerobot.TypePort
+	default:
+		return 0
+	}
 }

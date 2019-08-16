@@ -1,5 +1,7 @@
+variable "uptimerobot_api_key" {}
+
 provider "uptimerobot" {
-  # api_key = "YOUR UPTIME ROBOT API KEY"
+  api_key = var.uptimerobot_api_key
 }
 
 resource "uptimerobot_monitor" "test-monitor" {
