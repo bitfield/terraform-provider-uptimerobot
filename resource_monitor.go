@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	uptimerobot "github.com/bitfield/uptimerobot/pkg"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -15,22 +16,22 @@ func resourceMonitor() *schema.Resource {
 		Delete: resourceMonitorDelete,
 
 		Schema: map[string]*schema.Schema{
-			"friendly_name": &schema.Schema{
+			"friendly_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"alert_contact": &schema.Schema{
+			"alert_contact": {
 				Type:     schema.TypeSet,
 				ForceNew: true,
 				Required: true,
@@ -68,6 +69,11 @@ func resourceMonitorRead(d *schema.ResourceData, client interface{}) error {
 	}
 	mon, err := client.(*uptimerobot.Client).GetMonitor(id)
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "not found") {
+			// Resource was deleted out of band
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("API error: %v", err)
 	}
 	d.Set("url", mon.URL)
