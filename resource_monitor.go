@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	uptimerobot "github.com/bitfield/uptimerobot/pkg"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -68,6 +69,11 @@ func resourceMonitorRead(d *schema.ResourceData, client interface{}) error {
 	}
 	mon, err := client.(*uptimerobot.Client).GetMonitor(id)
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "not found") {
+			// Resource was deleted out of band
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("API error: %v", err)
 	}
 	d.Set("url", mon.URL)
