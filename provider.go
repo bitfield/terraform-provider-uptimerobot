@@ -5,7 +5,7 @@ import (
 	"os"
 
 	uptimerobot "github.com/bitfield/uptimerobot/pkg"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // Provider makes the provider available to Terraform.

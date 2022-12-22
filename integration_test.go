@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package main
@@ -5,6 +6,7 @@ package main
 import (
 	"os"
 	"testing"
+	"time"
 
 	uptimerobot "github.com/bitfield/uptimerobot/pkg"
 
@@ -65,6 +67,8 @@ func TestHandleResourceGoneAwayIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to delete test monitor out of band: %v", err)
 	}
+	// I don't love this, but otherwise we'll be rate-limited
+	time.Sleep(time.Minute)
 	planPath := "./test.plan"
 	exit, err := terraform.GetExitCodeForTerraformCommandE(t, terraformOptions, terraform.FormatArgs(terraformOptions, "plan", "--out="+planPath, "-input=false", "-lock=true", "-detailed-exitcode")...)
 	if err != nil {

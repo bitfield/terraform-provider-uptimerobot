@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	uptimerobot "github.com/bitfield/uptimerobot/pkg"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceMonitor() *schema.Resource {
